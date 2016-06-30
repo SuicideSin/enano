@@ -10,6 +10,7 @@
 #include <openssl/err.h>
 #include <openssl/md5.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
 #include <cstdint>
@@ -122,4 +123,13 @@ std::string pbkdf2(const std::string& password,const std::string& salt,const siz
 		(uint8_t*)salt.data(),salt.size(),iterations,key_byte_size,(uint8_t*)key.data())==0)
 		throw std::runtime_error("pbkdf2() - PKCS5_PBKDF2_HMAC_SHA1 failed.");
 	return key;
+}
+
+std::string crypto_rand(const size_t size)
+{
+	std::string bytes;
+	bytes.resize(size);
+	if(RAND_bytes((uint8_t*)bytes.c_str(),size)!=1)
+		throw std::runtime_error("crypto_rand() - Error getting cryptographically strong random numbers.");
+	return bytes;
 }

@@ -32,7 +32,7 @@ int main(int argc,char* argv[])
 
 		std::string salt_and_iv;
 		if(cipher_text.size()==0)
-			salt_and_iv="0123456789012345";
+			salt_and_iv=crypto_rand(16);
 		else
 		{
 			salt_and_iv=cipher_text.substr(0,16);
