@@ -15,16 +15,14 @@ int main(int argc,char* argv[])
 			throw std::runtime_error("Usage: enano filename.txt");
 		std::string filename(argv[1]);
 
-		/*stdin_echo(false);
+		stdin_echo(false);
 		std::string password;
 		std::cout<<"Password: "<<std::flush;
 		bool got_password=false;
 		if(std::getline(std::cin,password))
 			got_password=true;
 		stdin_echo(true);
-		std::cout<<std::endl;*/
-		std::string password="hello";
-		bool got_password=true;
+		std::cout<<std::endl;
 		if(!got_password)
 			throw std::runtime_error("Empty passwords are not allowed.");
 
@@ -38,13 +36,11 @@ int main(int argc,char* argv[])
 		if(cipher_text.size()>0)
 			plain_text=decrypt_aes256(cipher_text,password,"01234567890123456");
 
-		editor.start(filename,"helloaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab\n123\ntest\nworld\na\nb\nc\nd\ne\nf\ng");
-
-		/*std::cout<<"Old Data: "<<plain_text<<std::endl;
-		std::cout<<"New Data: "<<std::flush;
-		std::getline(std::cin,plain_text);
-		cipher_text=encrypt_aes256(plain_text,password,"01234567890123456");
-		string_to_file(cipher_text,filename);*/
+		editor.start(filename,plain_text,[&](const std::string& data)
+		{
+			cipher_text=encrypt_aes256(data,password,"01234567890123456");
+			string_to_file(cipher_text,filename);
+		});
 	}
 	catch(std::exception& error)
 	{

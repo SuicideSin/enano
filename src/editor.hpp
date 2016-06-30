@@ -8,7 +8,7 @@ class editor_t
 	public:
 		editor_t();
 
-		void start(const std::string& filename,const std::string& data);
+		void start(const std::string& filename,const std::string& data,std::function<void(const std::string&)> save_func);
 		void stop();
 
 		void type_lines(const std::vector<std::string>& lines);
@@ -38,6 +38,7 @@ class editor_t
 
 	private:
 		bool stop_m;
+		std::function<void(const std::string&)> save_func_m;
 		int y_top_margin_m;
 		int y_bottom_margin_m;
 		int yoff_m;

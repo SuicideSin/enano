@@ -3,11 +3,6 @@
 #include <stdexcept>
 #include <vector>
 
-void save(const std::string& data)
-{
-	string_to_file(data,"test.out");
-}
-
 std::vector<std::string> split(const std::string& data,const char delim)
 {
 	std::vector<std::string> lines;
@@ -35,11 +30,12 @@ std::string join(const std::vector<std::string>& lines,const char delim)
 	return data;
 }
 
-editor_t::editor_t():stop_m(true),y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0)
+editor_t::editor_t():stop_m(true),save_func_m(nullptr),y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0)
 {}
 
-void editor_t::start(const std::string& filename,const std::string& data)
+void editor_t::start(const std::string& filename,const std::string& data,std::function<void(const std::string&)> save_func)
 {
+	save_func_m=save_func;
 	stop_m=false;
 	name_m=filename;
 	lines_m=split(data,'\n');
@@ -78,8 +74,8 @@ void editor_t::start(const std::string& filename,const std::string& data)
 			newline();
 			resize();
 		}
-		else if(ch==KEY_F(1))
-			save(join(lines_m,'\n'));
+		else if(ch==KEY_F(1)&&save_func_m!=nullptr)
+			save_func_m(join(lines_m,'\n'));
 		else if(ch>=32&&ch<=126)
 		{
 			insert_char(ch);
@@ -465,7 +461,6 @@ void editor_t::resize()
 	getmaxyx(stdscr,h,w);
 	if(max_y()<=0)
 		throw std::runtime_error("Window size too small.");
-	save("offx: "+std::to_string(xoff_m));
 	erase();
 	for(int yy=yoff_m;yy<(int)lines_m.size()&&yy<=yoff_m+h;++yy)
 	{
