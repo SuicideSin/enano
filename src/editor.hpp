@@ -38,8 +38,10 @@ class editor_t
 
 	private:
 		bool stop_m;
+		int y_top_offset_m;
+		int y_bottom_offset_m;
 		int yoff_m;
-		int xoff_m;
+		//int xoff_m;
 		std::string name_m;
 		std::vector<std::string> lines_m;
 };

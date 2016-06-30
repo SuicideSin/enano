@@ -7,6 +7,8 @@
 
 int main(int argc,char* argv[])
 {
+	editor_t editor;
+
 	try
 	{
 		if(argc!=2)
@@ -36,7 +38,6 @@ int main(int argc,char* argv[])
 		if(cipher_text.size()>0)
 			plain_text=decrypt_aes256(cipher_text,password,"01234567890123456");
 
-		editor_t editor;
 		editor.start(filename,"hello\n123\ntest\nworld\na\nb\nc\nd\ne\nf\ng");
 
 		/*std::cout<<"Old Data: "<<plain_text<<std::endl;
@@ -47,11 +48,13 @@ int main(int argc,char* argv[])
 	}
 	catch(std::exception& error)
 	{
+		editor.stop();
 		std::cerr<<error.what()<<std::endl;
 		return 1;
 	}
 	catch(...)
 	{
+		editor.stop();
 		std::cerr<<"Unknown error occured."<<std::endl;
 		return 1;
 	}
