@@ -5,6 +5,21 @@
 #include "editor.hpp"
 #include "file.hpp"
 
+std::string get_password(const std::string& prompt)
+{
+	stdin_echo(false);
+	std::string password;
+	std::cout<<prompt<<std::flush;
+	bool got_password=false;
+	if(std::getline(std::cin,password)&&password.size()>0)
+		got_password=true;
+	stdin_echo(true);
+	std::cout<<std::endl;
+	if(!got_password)
+		throw std::runtime_error("Empty passwords are not allowed.");
+	return password;
+}
+
 int main(int argc,char* argv[])
 {
 	editor_t editor;
@@ -13,24 +28,16 @@ int main(int argc,char* argv[])
 	{
 		if(argc!=2)
 			throw std::runtime_error("Usage: enano filename.txt");
-		std::string filename(argv[1]);
 
+		std::string filename(argv[1]);
+		std::string password;
+		std::string salt_and_iv;
+		std::string plain_text;
 		std::string cipher_text;
+
 		if(!file_to_string(filename,cipher_text)&&exists(filename))
 			throw std::runtime_error("Failed to read \""+filename+"\".");
 
-		stdin_echo(false);
-		std::string password;
-		std::cout<<"Password: "<<std::flush;
-		bool got_password=false;
-		if(std::getline(std::cin,password))
-			got_password=true;
-		stdin_echo(true);
-		std::cout<<std::endl;
-		if(!got_password)
-			throw std::runtime_error("Empty passwords are not allowed.");
-
-		std::string salt_and_iv;
 		if(cipher_text.size()==0)
 			salt_and_iv=crypto_rand(16);
 		else
@@ -39,17 +46,44 @@ int main(int argc,char* argv[])
 			cipher_text=cipher_text.substr(16,cipher_text.size()-16);
 		}
 
-		password=pbkdf2(password,salt_and_iv,32,20);
-		std::string plain_text;
-
-		if(cipher_text.size()>0)
-			plain_text=decrypt_aes256(cipher_text,password,salt_and_iv);
+		while(true)
+		{
+			try
+			{
+				password=get_password("Enter password: ");
+				if(!exists(filename))
+				{
+					std::string password_verify=get_password("Re-enter password: ");
+					bool matches=(password==password_verify);
+					for(auto& ii:password_verify)
+						ii=' ';
+					if(!matches)
+						throw std::runtime_error("Passwords do not match");
+				}
+				password=pbkdf2(password,salt_and_iv,32,20);
+				if(cipher_text.size()>0)
+					plain_text=decrypt_aes256(cipher_text,password,salt_and_iv);
+				break;
+			}
+			catch(std::exception& error)
+			{
+				std::cerr<<error.what()<<std::endl;
+			}
+		}
 
 		editor.start(filename,plain_text,[&](const std::string& data)
 		{
 			cipher_text=encrypt_aes256(data,password,salt_and_iv);
 			return string_to_file(salt_and_iv+cipher_text,filename);
 		});
+		for(auto& ii:plain_text)
+			ii=' ';
+		for(auto& ii:password)
+			ii=' ';
+		for(auto& ii:salt_and_iv)
+			ii=' ';
+		for(auto& ii:salt_and_iv)
+			ii=' ';
 	}
 	catch(std::exception& error)
 	{

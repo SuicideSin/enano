@@ -87,22 +87,22 @@ std::string decrypt_aes256(const std::string& cipher,const std::string& key,cons
 	EVP_CIPHER_CTX* ctx=nullptr;
 	try
 	{
+		std::string error_str="Decryption failed.";
 		ctx=EVP_CIPHER_CTX_new();
 		if(key.size()!=AES256_KEY_SIZE)
-			throw std::runtime_error("decrypt_aes256() - Given key size is invalid ("+
-				std::to_string(AES256_KEY_SIZE)+"bytes ).");
+			throw std::runtime_error(error_str);
 		int temp_length;
 		int temp_unaligned_length;
 		if(ctx==nullptr)
-			throw std::runtime_error("decrypt_aes256() - Creating a EVP_CIPHER_CTX failed.");
+			throw std::runtime_error(error_str);
 		if(EVP_CIPHER_CTX_set_padding(ctx,1)==0)
-			throw std::runtime_error("edecrypt_aes256() - EVP_CIPHER_CTX_set_padding failed.");
+			throw std::runtime_error(error_str);
 		if(EVP_DecryptInit(ctx,EVP_aes_256_cbc(),(uint8_t*)key.data(),(uint8_t*)iv.data())==0)
-			throw std::runtime_error("encrypt_aes256() - EVP_DecryptInit failed.");
+			throw std::runtime_error(error_str);
 		if(EVP_DecryptUpdate(ctx,(uint8_t*)plain.data(),&temp_length,(uint8_t*)cipher.data(),cipher.size())==0)
-			throw std::runtime_error("decrypt_aes256() - EVP_DecryptUpdate failed.");
+			throw std::runtime_error(error_str);
 		if(EVP_DecryptFinal(ctx,(uint8_t*)plain.data()+temp_length,&temp_unaligned_length)==0)
-			throw std::runtime_error("decrypt_aes256() - EVP_DecryptFinal failed.");
+			throw std::runtime_error(error_str);
 		plain.resize(temp_length+temp_unaligned_length);
 	}
 	catch(...)
