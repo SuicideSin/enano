@@ -1,0 +1,432 @@
+#include "editor.hpp"
+#include "file.hpp"
+#include <vector>
+
+void save(const std::string& data)
+{
+	string_to_file(data,"test.out");
+}
+
+std::vector<std::string> split(const std::string& data,const char delim)
+{
+	std::vector<std::string> lines;
+	std::string line;
+	for(auto ii:data)
+		if(ii=='\n')
+		{
+			lines.push_back(line);
+			line="";
+		}
+		else
+			line+=ii;
+	lines.push_back(line);
+	line="";
+	return lines;
+}
+
+std::string join(const std::vector<std::string>& lines,const char delim)
+{
+	std::string data;
+	for(auto line:lines)
+		data+=line+delim;
+	if(data.size()>0)
+		data.erase(data.size()-1,1);
+	return data;
+}
+
+editor_t::editor_t():stop_m(true),yoff_m(0)
+{}
+
+void editor_t::start(const std::string& filename,const std::string& data)
+{
+	stop_m=false;
+	name_m=filename;
+	lines_m=split(data,'\n');
+	int ch;
+	initscr();
+	noecho();
+	keypad(stdscr,true);
+	type_lines(lines_m);
+	move(1,0);
+	resize();
+
+	while(!stop_m)
+	{
+		ch=getch();
+
+		if(ch==KEY_RESIZE)
+			resize();
+		else if(ch==KEY_HOME)
+			home();
+		else if(ch==KEY_END)
+			end();
+		else if(ch==KEY_UP)
+			move_up();
+		else if(ch==KEY_DOWN)
+			move_down();
+		else if(ch==KEY_LEFT)
+			move_left();
+		else if(ch==KEY_RIGHT)
+			move_right();
+		else if(ch==KEY_BACKSPACE||ch==127)
+			backspace();
+		else if(ch==KEY_DC)
+			del();
+		else if(ch=='\n')
+		{
+			newline();
+			resize();
+		}
+		else if(ch==KEY_F(1))
+			save(join(lines_m,'\n'));
+		else if(ch>=32&&ch<=126)
+		{
+			insert_char(ch);
+			resize();
+		}
+		else if(ch=='\t')
+		{
+			for(int ii=0;ii<4;++ii)
+				insert_char(' ');
+			resize();
+		}
+	}
+
+	endwin();
+}
+
+void editor_t::stop()
+{
+	stop_m=true;
+}
+
+void editor_t::type_lines(const std::vector<std::string>& lines)
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	move(gy,gx);
+	for(auto line:lines)
+	{
+		type_string(line);
+		move(++gy,0);
+	}
+}
+
+void editor_t::type_string(const std::string& str)
+{
+	if(stop_m)
+		return;
+	for(auto ii:str)
+		if(ii!='\n')
+			addch(ii);
+	refresh();
+}
+
+void editor_t::home()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	move(gy,0);
+}
+
+void editor_t::end()
+{
+	if(stop_m)
+		return;
+	int x;
+	int y;
+	get_pos(y,x);
+	move_pos(y,lines_m[y].size());
+}
+
+void editor_t::move_left()
+{
+	if(stop_m)
+		return;
+	int x;
+	int y;
+	get_pos(y,x);
+	if(x>0)
+	{
+		move_pos(y,x-1);
+	}
+	else if(y>0)
+	{
+		move_up();
+		end();
+	}
+}
+
+void editor_t::move_right()
+{
+	if(stop_m)
+		return;
+	int x;
+	int y;
+	get_pos(y,x);
+	if(x+1<=lines_m[y].size())
+	{
+		move_pos(y,x+1);
+	}
+	else if(y+1<lines_m.size())
+	{
+		move_down();
+		home();
+	}
+}
+
+void editor_t::move_up()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	int x;
+	int y;
+	get_pos(y,x);
+	if(gy==1&&yoff_m>0)
+	{
+		--yoff_m;
+		resize();
+	}
+	if(y>0)
+	{
+		move_pos(y-1,std::min(x,(int)lines_m[y-1].size()));
+		resize();
+	}
+}
+
+void editor_t::move_down()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	int x;
+	int y;
+	get_pos(y,x);
+	int w;
+	int h;
+	getmaxyx(stdscr,h,w);
+	if(gy==h-2&&y+1<lines_m.size())
+	{
+		++yoff_m;
+		resize();
+	}
+	if(y+1<lines_m.size())
+	{
+		move_pos(y+1,std::min(x,(int)lines_m[y+1].size()));
+		resize();
+	}
+}
+
+void editor_t::newline()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	int x;
+	int y;
+	get_pos(y,x);
+	std::string lhs=lines_m[y].substr(0,x);
+	std::string rhs=lines_m[y].substr(x,lines_m[y].size());
+	lines_m[y]=lhs;
+	lines_m.insert(lines_m.begin()+y+1,rhs);
+	int w;
+	int h;
+	getmaxyx(stdscr,h,w);
+	if(gy==h-2)
+		++yoff_m;
+	move_pos(y+1,0);
+	resize();
+}
+
+void editor_t::backspace()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	int x;
+	int y;
+	get_pos(y,x);
+	if(x>0)
+	{
+		lines_m[y].erase(x-1,1);
+		move_pos(y,x-1);
+		resize();
+	}
+	else if(y>0)
+	{
+		if(gy==1&&yoff_m>0)
+		{
+			--yoff_m;
+			resize();
+		}
+		std::string old_line=lines_m[y-1];
+		lines_m[y-1]+=lines_m[y];
+		lines_m.erase(lines_m.begin()+y);
+		move_pos(y-1,old_line.size());
+		resize();
+	}
+}
+
+void editor_t::del()
+{
+	if(stop_m)
+		return;
+	if(delch()!=ERR)
+	{
+		int x;
+		int y;
+		get_pos(y,x);
+		if((int)lines_m[y].size()-x>0)
+		{
+			lines_m[y].erase(x,1);
+			resize();
+		}
+		else if(y+1<lines_m.size())
+		{
+			std::string old_line=lines_m[y+1];
+			lines_m.erase(lines_m.begin()+y+1);
+			move_pos(y,lines_m[y].size());
+			lines_m[y]+=old_line;
+			resize();
+		}
+	}
+}
+
+void editor_t::insert_char(const char ch)
+{
+	if(stop_m)
+		return;
+	int x;
+	int y;
+	get_pos(y,x);
+	lines_m[y].insert(x,1,ch);
+	move_pos(y,x+1);
+	resize();
+}
+
+void editor_t::draw_top_bar()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	int w;
+	int h;
+	getmaxyx(stdscr,h,w);
+	move(0,0);
+	clrtoeol();
+	attron(A_REVERSE);
+	std::string title="enano";
+	std::string filename=name_m;
+	std::string line="line: "+std::to_string(gy-1);
+	std::string pos=" pos: "+std::to_string(gx)+" ";
+	int spaces=title.size()+filename.size()+line.size()+pos.size();
+	if(w>spaces)
+		spaces=w-spaces;
+	else
+		spaces=0;
+	std::string blanks="";
+	for(int ii=0;ii<spaces/2;++ii)
+		blanks+=' ';
+	if(spaces%2!=0)
+		pos+=' ';
+	type_string(title+blanks+filename+blanks+line+pos);
+	attroff(A_REVERSE);
+	move(gy,gx);
+	refresh();
+}
+
+void editor_t::draw_bottom_bar()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	int w;
+	int h;
+	getmaxyx(stdscr,h,w);
+	move(h-1,0);
+	clrtoeol();
+	std::vector<std::string> controls=
+	{
+		"F1 Save",
+		"^C Quit"
+	};
+	for(auto control:controls)
+	{
+		attron(A_REVERSE);
+		type_string(control.substr(0,2));
+		attroff(A_REVERSE);
+		type_string(control.substr(2,control.size()-2)+" ");
+	}
+	move(gy,gx);
+	refresh();
+}
+
+void editor_t::resize()
+{
+	if(stop_m)
+		return;
+	int gx;
+	int gy;
+	getyx(stdscr,gy,gx);
+	int w;
+	int h;
+	getmaxyx(stdscr,h,w);
+	save("yoff: "+std::to_string(yoff_m));
+	erase();
+	for(int yy=yoff_m;yy<(int)lines_m.size()&&yy<=yoff_m+h;++yy)
+	{
+		move(1+yy-yoff_m,0);
+		type_string(lines_m[yy]);
+	}
+	if(gy>=h-1)
+		gy=h-2;
+	move(gy,gx);
+	draw_top_bar();
+	draw_bottom_bar();
+}
+
+void editor_t::get_pos(int& y,int& x)
+{
+	if(stop_m)
+		return;
+	getyx(stdscr,y,x);
+	if(y>0)
+		--y;
+	y+=yoff_m;
+}
+
+void editor_t::move_pos(const int y,const int x)
+{
+	if(stop_m)
+		return;
+	move(y+1-yoff_m,x);
+}
+
+int editor_t::max_y()
+{
+	int w;
+	int h;
+	getmaxyx(stdscr,h,w);
+	if(h>3)
+		h-=3;
+	return h;
+}
