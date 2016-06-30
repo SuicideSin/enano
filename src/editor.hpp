@@ -1,4 +1,15 @@
-#include <ncurses.h>
+//Windows Dependencies:
+//		-lpdcurses
+
+//Linux Dependencies:
+//		-lncurses
+
+#if(defined(_WIN32)&&!defined(__CYGWIN__))
+	#include <curses.h>
+#else
+	#include <ncurses.h>
+#endif
+
 #include <functional>
 #include <string>
 #include <vector>

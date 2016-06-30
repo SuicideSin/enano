@@ -15,6 +15,10 @@ int main(int argc,char* argv[])
 			throw std::runtime_error("Usage: enano filename.txt");
 		std::string filename(argv[1]);
 
+		std::string cipher_text;
+		if(!file_to_string(filename,cipher_text)&&exists(filename))
+			throw std::runtime_error("Failed to read \""+filename+"\".");
+
 		stdin_echo(false);
 		std::string password;
 		std::cout<<"Password: "<<std::flush;
@@ -25,10 +29,6 @@ int main(int argc,char* argv[])
 		std::cout<<std::endl;
 		if(!got_password)
 			throw std::runtime_error("Empty passwords are not allowed.");
-
-		std::string cipher_text;
-		if(!file_to_string(filename,cipher_text))
-			throw std::runtime_error("Failed to read \""+filename+"\".");
 
 		std::string salt_and_iv;
 		if(cipher_text.size()==0)

@@ -1,3 +1,9 @@
+//Windows Dependencies:
+//		-lpdcurses
+
+//Linux Dependencies:
+//		-lncurses
+
 #include "editor.hpp"
 #include "file.hpp"
 #include <stdexcept>

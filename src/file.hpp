@@ -5,5 +5,6 @@
 
 bool file_to_string(const std::string& filename,std::string& data);
 bool string_to_file(const std::string& data,const std::string& filename);
+bool exists(const std::string& filename);
 
 #endif

@@ -4,7 +4,7 @@ CFLAGS=-O -std=c++11 -Wall
 LIB=-lcrypto -lncurses
 
 ifeq ($(OS),Windows_NT)
-	LIB+=-lWs2_32 -lgdi32
+	LIB+=-lWs2_32 -lgdi32 -lpdcurses
 endif
 
 all: enano
