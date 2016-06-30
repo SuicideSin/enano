@@ -218,17 +218,17 @@ void editor_t::move_right()
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	if(gx==w-1&&x+1<=lines_m[y].size())
+	if(gx==w-1&&x+1<=(int)lines_m[y].size())
 	{
 		++xoff_m;
 		resize();
 	}
-	if(x+1<=lines_m[y].size())
+	if(x+1<=(int)lines_m[y].size())
 	{
 		move_pos(y,x+1);
 		resize();
 	}
-	else if(y+1<lines_m.size())
+	else if(y+1<(int)lines_m.size())
 	{
 		move_down();
 		home();
@@ -270,12 +270,12 @@ void editor_t::move_down()
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	if(gy==h-y_bottom_margin_m-1&&y+1<lines_m.size())
+	if(gy==h-y_bottom_margin_m-1&&y+1<(int)lines_m.size())
 	{
 		++yoff_m;
 		resize();
 	}
-	if(y+1<lines_m.size())
+	if(y+1<(int)lines_m.size())
 	{
 		int nx=std::min(x,(int)lines_m[y+1].size());
 		if(nx<w)
@@ -363,7 +363,7 @@ void editor_t::del()
 			lines_m[y].erase(x,1);
 			resize();
 		}
-		else if(y+1<lines_m.size())
+		else if(y+1<(int)lines_m.size())
 		{
 			std::string old_line=lines_m[y+1];
 			lines_m.erase(lines_m.begin()+y+1);
@@ -394,7 +394,7 @@ void editor_t::insert_char(const char ch)
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	if(gx==w-1&&x+1<=lines_m[y].size())
+	if(gx==w-1&&x+1<=(int)lines_m[y].size())
 		++xoff_m;
 	move_pos(y,x+1);
 	resize();
