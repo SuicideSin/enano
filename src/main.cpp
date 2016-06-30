@@ -38,7 +38,7 @@ int main(int argc,char* argv[])
 		if(cipher_text.size()>0)
 			plain_text=decrypt_aes256(cipher_text,password,"01234567890123456");
 
-		editor.start(filename,"hello\n123\ntest\nworld\na\nb\nc\nd\ne\nf\ng");
+		editor.start(filename,"helloaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab\n123\ntest\nworld\na\nb\nc\nd\ne\nf\ng");
 
 		/*std::cout<<"Old Data: "<<plain_text<<std::endl;
 		std::cout<<"New Data: "<<std::flush;

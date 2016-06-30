@@ -41,7 +41,7 @@ class editor_t
 		int y_top_margin_m;
 		int y_bottom_margin_m;
 		int yoff_m;
-		//int xoff_m;
+		int xoff_m;
 		std::string name_m;
 		std::vector<std::string> lines_m;
 };
