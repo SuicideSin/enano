@@ -60,9 +60,8 @@ int main(int argc,char* argv[])
 					if(!matches)
 						throw std::runtime_error("Passwords do not match");
 				}
-				password=pbkdf2(password,salt_and_iv,32,20);
 				if(cipher_text.size()>0)
-					plain_text=decrypt_aes256(cipher_text,password,salt_and_iv);
+					plain_text=decrypt_aes256(cipher_text,pbkdf2(password,salt_and_iv,32,20),salt_and_iv);
 				break;
 			}
 			catch(std::exception& error)
@@ -73,7 +72,8 @@ int main(int argc,char* argv[])
 
 		editor.start(filename,plain_text,[&](const std::string& data)
 		{
-			cipher_text=encrypt_aes256(data,password,salt_and_iv);
+			salt_and_iv=crypto_rand(16);
+			cipher_text=encrypt_aes256(data,pbkdf2(password,salt_and_iv,32,20),salt_and_iv);
 			return string_to_file(salt_and_iv+cipher_text,filename);
 		});
 		for(auto& ii:plain_text)
@@ -82,7 +82,7 @@ int main(int argc,char* argv[])
 			ii=' ';
 		for(auto& ii:salt_and_iv)
 			ii=' ';
-		for(auto& ii:salt_and_iv)
+		for(auto& ii:cipher_text)
 			ii=' ';
 	}
 	catch(std::exception& error)
