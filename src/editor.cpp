@@ -33,7 +33,7 @@ std::string join(const std::vector<std::string>& lines,const char delim)
 editor_t::editor_t():stop_m(true),save_func_m(nullptr),y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0)
 {}
 
-void editor_t::start(const std::string& filename,const std::string& data,std::function<void(const std::string&)> save_func)
+void editor_t::start(const std::string& filename,const std::string& data,std::function<bool(const std::string&)> save_func)
 {
 	save_func_m=save_func;
 	stop_m=false;
@@ -50,6 +50,7 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 	while(!stop_m)
 	{
 		ch=getch();
+		status_m="";
 
 		if(ch==KEY_RESIZE)
 			resize();
@@ -75,16 +76,16 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 			resize();
 		}
 		else if(ch==KEY_F(1)&&save_func_m!=nullptr)
-			save_func_m(join(lines_m,'\n'));
-		else if(ch>=32&&ch<=126)
 		{
-			insert_char(ch);
+			if(save_func_m(join(lines_m,'\n')))
+				status_m="SAVED";
+			else
+				status_m="ERROR SAVING FILE";
 			resize();
 		}
-		else if(ch=='\t')
+		else if(ch=='\t'||(ch>=32&&ch<=126))
 		{
-			for(int ii=0;ii<4;++ii)
-				insert_char(' ');
+			insert_char(ch);
 			resize();
 		}
 	}
@@ -119,7 +120,13 @@ void editor_t::type_string(const std::string& str)
 		return;
 	for(auto ii:str)
 		if(ii!='\n')
-			addch(ii);
+		{
+			if(ii=='\t')
+				for(int ii=0;ii<4;++ii)
+					addch(' ');
+			else
+				addch(ii);
+		}
 	refresh();
 }
 
@@ -365,6 +372,12 @@ void editor_t::insert_char(const char ch)
 {
 	if(stop_m)
 		return;
+	if(ch=='\t')
+	{
+		for(int ii=0;ii<4;++ii)
+			insert_char(' ');
+		return;
+	}
 	int x;
 	int y;
 	get_pos(y,x);
@@ -399,6 +412,8 @@ void editor_t::draw_top_bar()
 	attron(A_REVERSE);
 	std::string title="enano";
 	std::string filename=name_m;
+	if(status_m.size()>0)
+		filename+=" ("+status_m+")";
 	std::string line="line: "+std::to_string(y+1);
 	std::string pos=" pos: "+std::to_string(gx+xoff_m)+" ";
 	int spaces=title.size()+filename.size()+line.size()+pos.size();

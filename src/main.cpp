@@ -30,16 +30,25 @@ int main(int argc,char* argv[])
 		if(!file_to_string(filename,cipher_text))
 			throw std::runtime_error("Failed to read \""+filename+"\".");
 
-		password=pbkdf2(password,"",32,20);
+		std::string salt_and_iv;
+		if(cipher_text.size()==0)
+			salt_and_iv="0123456789012345";
+		else
+		{
+			salt_and_iv=cipher_text.substr(0,16);
+			cipher_text=cipher_text.substr(16,cipher_text.size()-16);
+		}
+
+		password=pbkdf2(password,salt_and_iv,32,20);
 		std::string plain_text;
 
 		if(cipher_text.size()>0)
-			plain_text=decrypt_aes256(cipher_text,password,"01234567890123456");
+			plain_text=decrypt_aes256(cipher_text,password,salt_and_iv);
 
 		editor.start(filename,plain_text,[&](const std::string& data)
 		{
-			cipher_text=encrypt_aes256(data,password,"01234567890123456");
-			string_to_file(cipher_text,filename);
+			cipher_text=encrypt_aes256(data,password,salt_and_iv);
+			return string_to_file(salt_and_iv+cipher_text,filename);
 		});
 	}
 	catch(std::exception& error)
