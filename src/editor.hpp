@@ -38,8 +38,8 @@ class editor_t
 
 	private:
 		bool stop_m;
-		int y_top_offset_m;
-		int y_bottom_offset_m;
+		int y_top_margin_m;
+		int y_bottom_margin_m;
 		int yoff_m;
 		//int xoff_m;
 		std::string name_m;

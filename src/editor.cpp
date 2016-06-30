@@ -35,7 +35,7 @@ std::string join(const std::vector<std::string>& lines,const char delim)
 	return data;
 }
 
-editor_t::editor_t():stop_m(true),y_top_offset_m(2),y_bottom_offset_m(1),yoff_m(0)
+editor_t::editor_t():stop_m(true),y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0)
 {}
 
 void editor_t::start(const std::string& filename,const std::string& data)
@@ -48,7 +48,7 @@ void editor_t::start(const std::string& filename,const std::string& data)
 	noecho();
 	keypad(stdscr,true);
 	type_lines(lines_m);
-	move(y_top_offset_m,0);
+	move(y_top_margin_m,0);
 	resize();
 
 	while(!stop_m)
@@ -193,7 +193,7 @@ void editor_t::move_up()
 	int x;
 	int y;
 	get_pos(y,x);
-	if(gy==y_top_offset_m&&yoff_m>0)
+	if(gy==y_top_margin_m&&yoff_m>0)
 	{
 		--yoff_m;
 		resize();
@@ -218,7 +218,7 @@ void editor_t::move_down()
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	if(gy==h-2&&y+1<lines_m.size())
+	if(gy==h-y_bottom_margin_m-1&&y+1<lines_m.size())
 	{
 		++yoff_m;
 		resize();
@@ -247,7 +247,7 @@ void editor_t::newline()
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	if(gy==h-2)
+	if(gy==h-y_bottom_margin_m-1)
 		++yoff_m;
 	move_pos(y+1,0);
 	resize();
@@ -271,7 +271,7 @@ void editor_t::backspace()
 	}
 	else if(y>0)
 	{
-		if(gy==y_top_offset_m&&yoff_m>0)
+		if(gy==y_top_margin_m&&yoff_m>0)
 		{
 			--yoff_m;
 			resize();
@@ -336,7 +336,7 @@ void editor_t::draw_top_bar()
 	attron(A_REVERSE);
 	std::string title="enano";
 	std::string filename=name_m;
-	std::string line="line: "+std::to_string(gy-y_top_offset_m);
+	std::string line="line: "+std::to_string(gy-y_top_margin_m);
 	std::string pos=" pos: "+std::to_string(gx)+" ";
 	int spaces=title.size()+filename.size()+line.size()+pos.size();
 	if(w>spaces)
@@ -364,8 +364,12 @@ void editor_t::draw_bottom_bar()
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
+	for(int yy=h-y_bottom_margin_m;yy<h;++yy)
+	{
+		move(yy,0);
+		clrtoeol();
+	}
 	move(h-1,0);
-	clrtoeol();
 	std::vector<std::string> controls=
 	{
 		"F1 Save",
@@ -398,13 +402,13 @@ void editor_t::resize()
 	erase();
 	for(int yy=yoff_m;yy<(int)lines_m.size()&&yy<=yoff_m+h;++yy)
 	{
-		move(y_top_offset_m+yy-yoff_m,0);
+		move(y_top_margin_m+yy-yoff_m,0);
 		type_string(lines_m[yy]);
 	}
-	if(gy>=h-1)
-		gy=h-2;
-	if(gy<y_top_offset_m)
-		gy=y_top_offset_m;
+	if(gy>h-y_bottom_margin_m-1)
+		gy=h-y_bottom_margin_m-1;
+	if(gy<y_top_margin_m)
+		gy=y_top_margin_m;
 	move(gy,gx);
 	draw_top_bar();
 	draw_bottom_bar();
@@ -416,7 +420,7 @@ void editor_t::get_pos(int& y,int& x)
 		return;
 	getyx(stdscr,y,x);
 	if(y>0)
-		y-=y_top_offset_m;
+		y-=y_top_margin_m;
 	y+=yoff_m;
 }
 
@@ -424,7 +428,7 @@ void editor_t::move_pos(const int y,const int x)
 {
 	if(stop_m)
 		return;
-	move(y_top_offset_m+y-yoff_m,x);
+	move(y_top_margin_m+y-yoff_m,x);
 }
 
 int editor_t::max_y()
@@ -432,6 +436,6 @@ int editor_t::max_y()
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	h-=y_top_offset_m+y_bottom_offset_m;
+	h-=y_top_margin_m+y_bottom_margin_m;
 	return h;
 }
