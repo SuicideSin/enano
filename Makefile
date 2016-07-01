@@ -1,24 +1,16 @@
 SRC=src
-CXX=g++
+CXX=c++
 CFLAGS=-O -std=c++11 -Wall
-LIB=-lcrypto
+LIB=-lncurses -lcrypto
 INC=include
-PD=
 
-ifeq ($(OS),Windows_NT)
-	PD+=$(INC)/pdcurses/win32/*.c
-	CFLAGS+=-I $(INC)/pdcurses -I $(INC)/pdcurses/win32 -Wno-unused-but-set-variable
-	LIB+=-lpdcurses -lgdi32
-else
-	LIB+=-lncurses
-	ifneq ($(shell uname),Darwin)
-		CFLAGS+=-Wno-unused-but-set-variable
-	endif
+ifneq ($(shell uname),Darwin)
+	CFLAGS+=-Wno-unused-but-set-variable
 endif
 
 all: enano
 
-enano: $(PD) $(SRC)/console.cpp $(SRC)/crypto.cpp $(SRC)/editor.cpp $(SRC)/file.cpp $(SRC)/main.cpp
+enano: $(SRC)/console.cpp $(SRC)/crypto.cpp $(SRC)/editor.cpp $(SRC)/file.cpp $(SRC)/main.cpp
 	$(CXX) $(CFLAGS) $^ $(LIB) -o $@
 
 clean:
