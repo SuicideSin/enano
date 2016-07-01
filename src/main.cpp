@@ -31,7 +31,8 @@ int main(int argc,char* argv[])
 
 		std::string filename(argv[1]);
 		std::string password;
-		std::string salt_and_iv;
+		std::string salt;
+		std::string iv;
 		std::string plain_text;
 		std::string cipher_text;
 
@@ -39,11 +40,15 @@ int main(int argc,char* argv[])
 			throw std::runtime_error("Failed to read \""+filename+"\".");
 
 		if(cipher_text.size()==0)
-			salt_and_iv=crypto_rand(16);
+		{
+			salt=crypto_rand(16);
+			iv=crypto_rand(16);
+		}
 		else
 		{
-			salt_and_iv=cipher_text.substr(0,16);
-			cipher_text=cipher_text.substr(16,cipher_text.size()-16);
+			salt=cipher_text.substr(0,16);
+			iv=cipher_text.substr(16,16);
+			cipher_text=cipher_text.substr(32,cipher_text.size()-32);
 		}
 
 		while(true)
@@ -61,7 +66,7 @@ int main(int argc,char* argv[])
 						throw std::runtime_error("Passwords do not match");
 				}
 				if(cipher_text.size()>0)
-					plain_text=decrypt_aes256(cipher_text,pbkdf2(password,salt_and_iv,32,20),salt_and_iv);
+					plain_text=decrypt_aes256(cipher_text,pbkdf2(password,salt,32,20),iv);
 				break;
 			}
 			catch(std::exception& error)
@@ -72,15 +77,18 @@ int main(int argc,char* argv[])
 
 		editor.start(filename,plain_text,[&](const std::string& data)
 		{
-			salt_and_iv=crypto_rand(16);
-			cipher_text=encrypt_aes256(data,pbkdf2(password,salt_and_iv,32,20),salt_and_iv);
-			return string_to_file(salt_and_iv+cipher_text,filename);
+			salt=crypto_rand(16);
+			iv=crypto_rand(16);
+			cipher_text=encrypt_aes256(data,pbkdf2(password,salt,32,20),iv);
+			return string_to_file(salt+iv+cipher_text,filename);
 		});
 		for(auto& ii:plain_text)
 			ii=' ';
 		for(auto& ii:password)
 			ii=' ';
-		for(auto& ii:salt_and_iv)
+		for(auto& ii:salt)
+			ii=' ';
+		for(auto& ii:iv)
 			ii=' ';
 		for(auto& ii:cipher_text)
 			ii=' ';
