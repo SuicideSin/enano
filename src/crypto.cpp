@@ -6,6 +6,7 @@
 
 #include "crypto.hpp"
 
+#include <cstdint>
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/md5.h>
@@ -13,7 +14,7 @@
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
-#include <cstdint>
+#include <stdexcept>
 
 #define AES_BLOCK_SIZE					16
 #define AES256_KEY_SIZE					32
