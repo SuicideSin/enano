@@ -44,12 +44,14 @@ int main(int argc,char* argv[])
 			salt=crypto_rand(16);
 			iv=crypto_rand(16);
 		}
-		else
+		else if(cipher_text.size()>=32)
 		{
 			salt=cipher_text.substr(0,16);
 			iv=cipher_text.substr(16,16);
 			cipher_text=cipher_text.substr(32,cipher_text.size()-32);
 		}
+		else
+			throw std::runtime_error("Unable to decrypt file.");
 
 		while(true)
 		{
