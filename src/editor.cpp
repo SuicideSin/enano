@@ -78,7 +78,7 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 			newline();
 			resize();
 		}
-		else if(ch==KEY_F(1)&&save_func_m!=nullptr)
+		else if(ch==15&&save_func_m!=nullptr)
 		{
 			if(save_func_m(join(lines_m,'\n')))
 				status_m="SAVED";
@@ -453,7 +453,7 @@ void editor_t::draw_bottom_bar()
 	move(h-1,0);
 	std::vector<std::string> controls=
 	{
-		"F1 Save",
+		"^O Save",
 		"^C Quit"
 	};
 	for(auto control:controls)
