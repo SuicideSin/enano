@@ -4,3 +4,7 @@ Nano-like clone that reads/writes encrypted files.
 - Uses AES256 encryption.
 
 Untested on Windows...
+
+Wanted features:
+- Ctrl+K/Ctrl+U - Cut and paste lines.
+- Page-Up/Page-Down - Move up and down faster...

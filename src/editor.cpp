@@ -33,7 +33,7 @@ std::string join(const std::vector<std::string>& lines,const char delim)
 	return data;
 }
 
-editor_t::editor_t():stop_m(true),save_func_m(nullptr),y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0)
+editor_t::editor_t():refresh_m(true),stop_m(true),save_func_m(nullptr),y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0)
 {}
 
 void editor_t::start(const std::string& filename,const std::string& data,std::function<bool(const std::string&)> save_func)
@@ -48,15 +48,24 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 	keypad(stdscr,true);
 	type_lines(lines_m);
 	move(y_top_margin_m,0);
-	resize();
+	nodelay(stdscr,true);
 
 	while(!stop_m)
 	{
 		ch=getch();
 		status_m="";
 
+		if(ch==ERR)
+		{
+			if(refresh_m)
+			{
+				resize();
+				refresh_m=false;
+			}
+			continue;
+		}
 		if(ch==KEY_RESIZE)
-			resize();
+			refresh_m=true;
 		else if(ch==KEY_HOME)
 			home();
 		else if(ch==KEY_END)
@@ -76,7 +85,7 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 		else if(ch=='\n')
 		{
 			newline();
-			resize();
+			refresh_m=true;
 		}
 		else if(ch==15&&save_func_m!=nullptr)
 		{
@@ -84,12 +93,12 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 				status_m="SAVED";
 			else
 				status_m="ERROR SAVING FILE";
-			resize();
+			refresh_m=true;
 		}
 		else if(ch=='\t'||(ch>=32&&ch<=126))
 		{
 			insert_char(ch);
-			resize();
+			refresh_m=true;
 		}
 	}
 
@@ -142,7 +151,7 @@ void editor_t::home()
 	getyx(stdscr,gy,gx);
 	xoff_m=0;
 	move(gy,0);
-	resize();
+	refresh_m=true;
 }
 
 void editor_t::end()
@@ -172,7 +181,7 @@ void editor_t::end()
 	}
 	move(gy,std::min(w-1,(int)lines_m[y].size()));
 	if(update)
-		resize();
+		refresh_m=true;
 }
 
 void editor_t::move_left()
@@ -188,12 +197,12 @@ void editor_t::move_left()
 	if(gx==0&&xoff_m>0)
 	{
 		--xoff_m;
-		resize();
+		refresh_m=true;
 	}
 	if(x>0)
 	{
 		move_pos(y,x-1);
-		resize();
+		refresh_m=true;
 	}
 	else if(y>0)
 	{
@@ -218,12 +227,12 @@ void editor_t::move_right()
 	if(gx==w-1&&x+1<=(int)lines_m[y].size())
 	{
 		++xoff_m;
-		resize();
+		refresh_m=true;
 	}
 	if(x+1<=(int)lines_m[y].size())
 	{
 		move_pos(y,x+1);
-		resize();
+		refresh_m=true;
 	}
 	else if(y+1<(int)lines_m.size())
 	{
@@ -245,12 +254,12 @@ void editor_t::move_up()
 	if(gy==y_top_margin_m&&yoff_m>0)
 	{
 		--yoff_m;
-		resize();
+		refresh_m=true;
 	}
 	if(y>0)
 	{
 		move_pos(y-1,std::min(x,(int)lines_m[y-1].size()));
-		resize();
+		refresh_m=true;
 	}
 }
 
@@ -270,7 +279,7 @@ void editor_t::move_down()
 	if(gy==h-y_bottom_margin_m-1&&y+1<(int)lines_m.size())
 	{
 		++yoff_m;
-		resize();
+		refresh_m=true;
 	}
 	if(y+1<(int)lines_m.size())
 	{
@@ -278,7 +287,7 @@ void editor_t::move_down()
 		if(nx<w)
 			xoff_m=0;
 		move_pos(y+1,nx);
-		resize();
+		refresh_m=true;
 	}
 }
 
@@ -303,7 +312,7 @@ void editor_t::newline()
 		++yoff_m;
 	xoff_m=0;
 	move_pos(y+1,0);
-	resize();
+	refresh_m=true;
 }
 
 void editor_t::backspace()
@@ -325,14 +334,14 @@ void editor_t::backspace()
 	{
 		lines_m[y].erase(x-1,1);
 		move_pos(y,x-1);
-		resize();
+		refresh_m=true;
 	}
 	else if(y>0)
 	{
 		if(gy==y_top_margin_m&&yoff_m>0)
 		{
 			--yoff_m;
-			resize();
+			refresh_m=true;
 		}
 		std::string old_line=lines_m[y-1];
 		lines_m[y-1]+=lines_m[y];
@@ -342,7 +351,7 @@ void editor_t::backspace()
 		else
 			xoff_m=0;
 		move_pos(y-1,old_line.size());
-		resize();
+		refresh_m=true;
 	}
 }
 
@@ -358,7 +367,7 @@ void editor_t::del()
 		if((int)lines_m[y].size()-x>0)
 		{
 			lines_m[y].erase(x,1);
-			resize();
+			refresh_m=true;
 		}
 		else if(y+1<(int)lines_m.size())
 		{
@@ -366,7 +375,7 @@ void editor_t::del()
 			lines_m.erase(lines_m.begin()+y+1);
 			move_pos(y,lines_m[y].size());
 			lines_m[y]+=old_line;
-			resize();
+			refresh_m=true;
 		}
 	}
 }
@@ -394,7 +403,7 @@ void editor_t::insert_char(const char ch)
 	if(gx==w-1&&x+1<=(int)lines_m[y].size())
 		++xoff_m;
 	move_pos(y,x+1);
-	resize();
+	refresh_m=true;
 }
 
 void editor_t::draw_top_bar()

@@ -41,6 +41,7 @@ class editor_t
 		int max_y();
 
 	private:
+		bool refresh_m;
 		bool stop_m;
 		std::function<bool(const std::string&)> save_func_m;
 		int y_top_margin_m;
