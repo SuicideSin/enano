@@ -23,8 +23,8 @@ class editor_t
 
 		void move_left();
 		void move_right();
-		void move_up();
-		void move_down();
+		void move_up(bool page=false);
+		void move_down(bool page=false);
 
 		void newline();
 		void backspace();

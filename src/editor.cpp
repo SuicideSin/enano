@@ -5,6 +5,7 @@
 #include "file.hpp"
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 
 std::vector<std::string> split(const std::string& data,const char delim)
 {
@@ -70,10 +71,14 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 			home();
 		else if(ch==KEY_END)
 			end();
+		else if(ch==KEY_PPAGE)
+			move_up(true);
 		else if(ch==KEY_UP)
-			move_up();
+			move_up(false);
+		else if(ch==KEY_NPAGE)
+			move_down(true);
 		else if(ch==KEY_DOWN)
-			move_down();
+			move_down(false);
 		else if(ch==KEY_LEFT)
 			move_left();
 		else if(ch==KEY_RIGHT)
@@ -241,53 +246,74 @@ void editor_t::move_right()
 	}
 }
 
-void editor_t::move_up()
+void editor_t::move_up(bool page)
 {
 	if(stop_m)
 		return;
-	int gx;
-	int gy;
-	getyx(stdscr,gy,gx);
-	int x;
-	int y;
-	get_pos(y,x);
-	if(gy==y_top_margin_m&&yoff_m>0)
-	{
-		--yoff_m;
-		refresh_m=true;
-	}
-	if(y>0)
-	{
-		move_pos(y-1,std::min(x,(int)lines_m[y-1].size()));
-		refresh_m=true;
-	}
-}
-
-void editor_t::move_down()
-{
-	if(stop_m)
-		return;
-	int gx;
-	int gy;
-	getyx(stdscr,gy,gx);
-	int x;
-	int y;
-	get_pos(y,x);
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	if(gy==h-y_bottom_margin_m-1&&y+1<(int)lines_m.size())
+	int times=1;
+	if(page)
+		times=h;
+
+	for(int ii=0;ii<times;++ii)
 	{
-		++yoff_m;
-		refresh_m=true;
+		if(stop_m)
+			return;
+		int gx;
+		int gy;
+		getyx(stdscr,gy,gx);
+		int x;
+		int y;
+		get_pos(y,x);
+		if(gy==y_top_margin_m&&yoff_m>0)
+		{
+			--yoff_m;
+			refresh_m=true;
+		}
+		if(y>0)
+		{
+			move_pos(y-1,std::min(x,(int)lines_m[y-1].size()));
+			refresh_m=true;
+		}
 	}
-	if(y+1<(int)lines_m.size())
+}
+
+void editor_t::move_down(bool page)
+{
+	if(stop_m)
+		return;
+	int w;
+	int h;
+	getmaxyx(stdscr,h,w);
+	int times=1;
+	if(page)
+		times=h;
+
+	for(int ii=0;ii<times;++ii)
 	{
-		int nx=std::min(x,(int)lines_m[y+1].size());
-		if(nx<w)
-			xoff_m=0;
-		move_pos(y+1,nx);
-		refresh_m=true;
+		if(stop_m)
+			return;
+		int gx;
+		int gy;
+		getyx(stdscr,gy,gx);
+		int x;
+		int y;
+		get_pos(y,x);
+		if(gy==h-y_bottom_margin_m-1&&y+1<(int)lines_m.size())
+		{
+			++yoff_m;
+			refresh_m=true;
+		}
+		if(y+1<(int)lines_m.size())
+		{
+			int nx=std::min(x,(int)lines_m[y+1].size());
+			if(nx<w)
+				xoff_m=0;
+			move_pos(y+1,nx);
+			refresh_m=true;
+		}
 	}
 }
 
