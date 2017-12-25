@@ -2,7 +2,6 @@
 //		-lncurses
 
 #include <ncurses.h>
-
 #include <functional>
 #include <string>
 #include <vector>
@@ -30,7 +29,11 @@ class editor_t
 		void backspace();
 		void del();
 
+		void cut_line();
+		void uncut_lines();
+
 		void insert_char(const char ch);
+		void insert_string(const std::string& str);
 
 		void draw_top_bar();
 		void draw_bottom_bar();
@@ -51,4 +54,6 @@ class editor_t
 		std::string name_m;
 		std::vector<std::string> lines_m;
 		std::string status_m;
+		std::vector<std::string> cut_buffer_m;
+		bool cut_moved_m;
 };

@@ -6,5 +6,7 @@ Nano-like clone that reads/writes encrypted files.
 Untested on Windows...
 
 Wanted features:
-- Ctrl+K/Ctrl+U - Cut and paste lines.
-- Page-Up/Page-Down - Move up and down faster...
+- Page-Up/Page-Down - Move up and down faster...(hacky at the moment)
+- Find text
+- Display position
+- Display status info

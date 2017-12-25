@@ -3,9 +3,9 @@
 
 #include "editor.hpp"
 #include "file.hpp"
+#include <chrono>
 #include <stdexcept>
-#include <vector>
-#include <iostream>
+#include <thread>
 
 std::vector<std::string> split(const std::string& data,const char delim)
 {
@@ -34,7 +34,8 @@ std::string join(const std::vector<std::string>& lines,const char delim)
 	return data;
 }
 
-editor_t::editor_t():refresh_m(true),stop_m(true),save_func_m(nullptr),y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0)
+editor_t::editor_t():refresh_m(true),stop_m(true),save_func_m(nullptr),
+	y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0),cut_moved_m(false)
 {}
 
 void editor_t::start(const std::string& filename,const std::string& data,std::function<bool(const std::string&)> save_func)
@@ -63,6 +64,7 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 				resize();
 				refresh_m=false;
 			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			continue;
 		}
 		if(ch==KEY_RESIZE)
@@ -87,6 +89,14 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 			backspace();
 		else if(ch==KEY_DC)
 			del();
+		else if(ch==11)
+		{
+			cut_line();
+		}
+		else if(ch==21)
+		{
+			uncut_lines();
+		}
 		else if(ch=='\n')
 		{
 			newline();
@@ -278,6 +288,7 @@ void editor_t::move_up(bool page)
 			refresh_m=true;
 		}
 	}
+	cut_moved_m=true;
 }
 
 void editor_t::move_down(bool page)
@@ -315,6 +326,7 @@ void editor_t::move_down(bool page)
 			refresh_m=true;
 		}
 	}
+	cut_moved_m=true;
 }
 
 void editor_t::newline()
@@ -381,6 +393,37 @@ void editor_t::backspace()
 	}
 }
 
+void editor_t::cut_line()
+{
+	if(stop_m)
+		return;
+	if(cut_moved_m)
+	{
+		cut_moved_m=false;
+		cut_buffer_m.clear();
+	}
+	int x;
+	int y;
+	get_pos(y,x);
+	home();
+	cut_buffer_m.push_back(lines_m[y]);
+	lines_m.erase(lines_m.begin()+y);
+	refresh_m=true;
+}
+
+void editor_t::uncut_lines()
+{
+	if(stop_m)
+		return;
+	for(size_t ii=0;ii<cut_buffer_m.size();++ii)
+	{
+		insert_string(cut_buffer_m[ii]);
+		newline();
+	}
+	home();
+	refresh_m=true;
+}
+
 void editor_t::del()
 {
 	if(stop_m)
@@ -430,6 +473,12 @@ void editor_t::insert_char(const char ch)
 		++xoff_m;
 	move_pos(y,x+1);
 	refresh_m=true;
+}
+
+void editor_t::insert_string(const std::string& str)
+{
+	for(size_t ii=0;ii<str.size();++ii)
+		insert_char(str[ii]);
 }
 
 void editor_t::draw_top_bar()
@@ -489,7 +538,9 @@ void editor_t::draw_bottom_bar()
 	std::vector<std::string> controls=
 	{
 		"^O Save",
-		"^C Quit"
+		"^C Quit",
+		"^K Cut Text",
+		"^U Uncut Text"
 	};
 	for(auto control:controls)
 	{

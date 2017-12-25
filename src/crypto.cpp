@@ -44,7 +44,11 @@ static crypto_initialize_t crypto_initializer;
 static void aes_cleanup(EVP_CIPHER_CTX* ctx)
 {
 	EVP_CIPHER_CTX_free(ctx);
-	ERR_remove_state(0);
+	#if(OPENSSL_VERSION_NUMBER<0x10000000L)
+		ERR_remove_state(0);
+	#elif(OPENSSL_VERSION_NUMBER<0x10100000L)
+		ERR_remove_thread_state(NULL);
+	#endif
 }
 
 std::string encrypt_aes256(const std::string& plain,const std::string& key,const std::string& iv)
