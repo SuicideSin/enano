@@ -406,8 +406,17 @@ void editor_t::cut_line()
 	int y;
 	get_pos(y,x);
 	home();
-	cut_buffer_m.push_back(lines_m[y]);
-	lines_m.erase(lines_m.begin()+y);
+	if(lines_m.size()==(size_t)y+1)
+	{
+		if(lines_m[y].size()>0)
+			cut_buffer_m.push_back(lines_m[y]);
+		lines_m[y]="";
+	}
+	else
+	{
+		cut_buffer_m.push_back(lines_m[y]);
+		lines_m.erase(lines_m.begin()+y);
+	}
 	refresh_m=true;
 }
 
@@ -465,6 +474,8 @@ void editor_t::insert_char(const char ch)
 	int gx;
 	int gy;
 	getyx(stdscr,gy,gx);
+	if(lines_m.size()<0)
+		lines_m.push_back("");
 	lines_m[y].insert(x,1,ch);
 	int w;
 	int h;
@@ -523,6 +534,9 @@ void editor_t::draw_bottom_bar()
 {
 	if(stop_m)
 		return;
+	int x;
+	int y;
+	get_pos(y,x);
 	int gx;
 	int gy;
 	getyx(stdscr,gy,gx);
@@ -534,6 +548,15 @@ void editor_t::draw_bottom_bar()
 		move(yy,0);
 		clrtoeol();
 	}
+
+	//Draw Status
+	move(h-2,0);
+	attron(A_REVERSE);
+	std::string status_bar="[ line "+std::to_string(y+1)+"/"+std::to_string(lines_m.size())+" ]";
+	type_string(status_bar);
+	attroff(A_REVERSE);
+
+	//Draw Controls
 	move(h-1,0);
 	std::vector<std::string> controls=
 	{
