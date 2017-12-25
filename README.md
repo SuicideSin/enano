@@ -6,5 +6,4 @@ Nano-like clone that reads/writes encrypted files.
 Untested on Windows...
 
 Wanted features:
-- Page-Up/Page-Down - Move up and down faster...(hacky at the moment)
 - Find text

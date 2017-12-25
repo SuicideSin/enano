@@ -73,14 +73,14 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 			home();
 		else if(ch==KEY_END)
 			end();
-		else if(ch==KEY_PPAGE)
-			move_up(true);
 		else if(ch==KEY_UP)
-			move_up(false);
-		else if(ch==KEY_NPAGE)
-			move_down(true);
+			move_up();
 		else if(ch==KEY_DOWN)
-			move_down(false);
+			move_down();
+		else if(ch==KEY_PPAGE)
+			move_up(std::max(0,max_y()-1));
+		else if(ch==KEY_NPAGE)
+			move_down(std::max(0,max_y()-1));
 		else if(ch==KEY_LEFT)
 			move_left();
 		else if(ch==KEY_RIGHT)
@@ -252,17 +252,13 @@ void editor_t::move_right()
 	}
 }
 
-void editor_t::move_up(bool page)
+void editor_t::move_up(const int times)
 {
 	if(stop_m)
 		return;
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	int times=1;
-	if(page)
-		times=h;
-
 	for(int ii=0;ii<times;++ii)
 	{
 		if(stop_m)
@@ -287,17 +283,13 @@ void editor_t::move_up(bool page)
 	cut_moved_m=true;
 }
 
-void editor_t::move_down(bool page)
+void editor_t::move_down(const int times)
 {
 	if(stop_m)
 		return;
 	int w;
 	int h;
 	getmaxyx(stdscr,h,w);
-	int times=1;
-	if(page)
-		times=h;
-
 	for(int ii=0;ii<times;++ii)
 	{
 		if(stop_m)
