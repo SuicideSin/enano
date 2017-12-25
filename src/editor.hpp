@@ -56,4 +56,6 @@ class editor_t
 		std::string status_m;
 		std::vector<std::string> cut_buffer_m;
 		bool cut_moved_m;
+		std::string modified_str_m;
+		std::string saved_str_m;
 };

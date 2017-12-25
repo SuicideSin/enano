@@ -35,7 +35,8 @@ std::string join(const std::vector<std::string>& lines,const char delim)
 }
 
 editor_t::editor_t():refresh_m(true),stop_m(true),save_func_m(nullptr),
-	y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0),cut_moved_m(false)
+	y_top_margin_m(2),y_bottom_margin_m(2),yoff_m(0),xoff_m(0),cut_moved_m(false),
+	modified_str_m("MODIFIED"),saved_str_m("SAVED")
 {}
 
 void editor_t::start(const std::string& filename,const std::string& data,std::function<bool(const std::string&)> save_func)
@@ -55,7 +56,6 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 	while(!stop_m)
 	{
 		ch=getch();
-		status_m="";
 
 		if(ch==ERR)
 		{
@@ -90,13 +90,9 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 		else if(ch==KEY_DC)
 			del();
 		else if(ch==11)
-		{
 			cut_line();
-		}
 		else if(ch==21)
-		{
 			uncut_lines();
-		}
 		else if(ch=='\n')
 		{
 			newline();
@@ -105,7 +101,7 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 		else if(ch==15&&save_func_m!=nullptr)
 		{
 			if(save_func_m(join(lines_m,'\n')))
-				status_m="SAVED";
+				status_m=saved_str_m;
 			else
 				status_m="ERROR SAVING FILE";
 			refresh_m=true;
@@ -368,6 +364,7 @@ void editor_t::backspace()
 	getmaxyx(stdscr,h,w);
 	if(gx==0&&xoff_m>0)
 		--xoff_m;
+	bool old_refresh=refresh_m;
 	if(x>0)
 	{
 		lines_m[y].erase(x-1,1);
@@ -391,6 +388,8 @@ void editor_t::backspace()
 		move_pos(y-1,old_line.size());
 		refresh_m=true;
 	}
+	if(!old_refresh&&refresh_m)
+		status_m=modified_str_m;
 }
 
 void editor_t::cut_line()
@@ -406,6 +405,7 @@ void editor_t::cut_line()
 	int y;
 	get_pos(y,x);
 	home();
+	size_t old_cut_buffer_size=cut_buffer_m.size();
 	if(lines_m.size()==(size_t)y+1)
 	{
 		if(lines_m[y].size()>0)
@@ -418,6 +418,8 @@ void editor_t::cut_line()
 		lines_m.erase(lines_m.begin()+y);
 	}
 	refresh_m=true;
+	if(old_cut_buffer_size!=cut_buffer_m.size())
+		status_m=modified_str_m;
 }
 
 void editor_t::uncut_lines()
@@ -442,6 +444,7 @@ void editor_t::del()
 		int x;
 		int y;
 		get_pos(y,x);
+		bool old_refresh=refresh_m;
 		if((int)lines_m[y].size()-x>0)
 		{
 			lines_m[y].erase(x,1);
@@ -455,6 +458,8 @@ void editor_t::del()
 			lines_m[y]+=old_line;
 			refresh_m=true;
 		}
+		if(!old_refresh&&refresh_m)
+			status_m=modified_str_m;
 	}
 }
 
@@ -484,6 +489,7 @@ void editor_t::insert_char(const char ch)
 		++xoff_m;
 	move_pos(y,x+1);
 	refresh_m=true;
+	status_m=modified_str_m;
 }
 
 void editor_t::insert_string(const std::string& str)
@@ -512,7 +518,7 @@ void editor_t::draw_top_bar()
 	std::string filename=name_m;
 	if(status_m.size()>0)
 		filename+=" ("+status_m+")";
-	std::string line="line: "+std::to_string(y+1);
+	std::string line="line: "+std::to_string(y+1)+"/"+std::to_string(std::max((size_t)1,lines_m.size()));
 	std::string pos=" pos: "+std::to_string(gx+xoff_m)+" ";
 	int spaces=title.size()+filename.size()+line.size()+pos.size();
 	if(w>spaces)
@@ -548,15 +554,6 @@ void editor_t::draw_bottom_bar()
 		move(yy,0);
 		clrtoeol();
 	}
-
-	//Draw Status
-	move(h-2,0);
-	attron(A_REVERSE);
-	std::string status_bar="[ line "+std::to_string(y+1)+"/"+std::to_string(lines_m.size())+" ]";
-	type_string(status_bar);
-	attroff(A_REVERSE);
-
-	//Draw Controls
 	move(h-1,0);
 	std::vector<std::string> controls=
 	{

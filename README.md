@@ -8,5 +8,3 @@ Untested on Windows...
 Wanted features:
 - Page-Up/Page-Down - Move up and down faster...(hacky at the moment)
 - Find text
-- Display position
-- Display status info
