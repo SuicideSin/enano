@@ -277,7 +277,8 @@ void editor_t::move_up(const int times)
 		if(y>0)
 		{
 			move_pos(y-1,std::min(x,(int)lines_m[y-1].size()));
-			refresh_m=true;
+			draw_top_bar();
+			draw_bottom_bar();
 		}
 	}
 	cut_moved_m=true;
@@ -311,7 +312,8 @@ void editor_t::move_down(const int times)
 			if(nx<w)
 				xoff_m=0;
 			move_pos(y+1,nx);
-			refresh_m=true;
+			draw_top_bar();
+			draw_bottom_bar();
 		}
 	}
 	cut_moved_m=true;
