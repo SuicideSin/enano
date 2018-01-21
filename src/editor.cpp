@@ -473,7 +473,7 @@ void editor_t::insert_char(const char ch)
 	int gx;
 	int gy;
 	getyx(stdscr,gy,gx);
-	if(lines_m.size()<0)
+	if(lines_m.size()<=0)
 		lines_m.push_back("");
 	lines_m[y].insert(x,1,ch);
 	int w;
