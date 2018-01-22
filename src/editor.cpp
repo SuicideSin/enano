@@ -52,6 +52,7 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 	type_lines(lines_m);
 	move(y_top_margin_m,0);
 	nodelay(stdscr,true);
+	raw();
 
 	while(!stop_m)
 	{
@@ -67,6 +68,7 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			continue;
 		}
+
 		if(ch==KEY_RESIZE)
 			refresh_m=true;
 		else if(ch==KEY_HOME)
@@ -110,6 +112,11 @@ void editor_t::start(const std::string& filename,const std::string& data,std::fu
 		{
 			insert_char(ch);
 			refresh_m=true;
+		}
+		else if(ch==3)
+		{
+			stop();
+			exit(0);
 		}
 	}
 

@@ -7,6 +7,3 @@ Untested on Windows...
 
 Wanted features:
 - Find text
-
-Bugs:
-- MacOS doesn't seem to recognize Ctrl+O as a key press...wtf?!
